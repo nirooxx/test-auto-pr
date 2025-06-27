@@ -20,23 +20,27 @@ jobs:
       - name: Generate or update files
         run: |
           # Beispiel: Timestamp aktualisieren
-          echo "Last updated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> timestamp.txt || true
+          echo "Last updated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> timestamp.txt
 
       - name: Create or update pull request
+        id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
-          # Token mit Schreibrechten – GITHUB_TOKEN ist ausreichend
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: generated-sources
           base: main
-          title: "chore: update generated annotations & models"
-          commit-message: "chore: update generated annotations & models"
+          commit-message: "chore: update timestamp.txt"
+          title: "chore: update timestamp.txt"
           body: |
-            Dieser PR aktualisiert automatisch die generierten Annotations & Models.
-          add-paths: |
-            annotations/**
-            models/**
-          # Aktiviert das Auto-Merge direkt nach grünem CI-Check
-          auto-merge: true
-          merge-method: squash
+            Dieser PR aktualisiert automatisch die timestamp.txt.
+          # Wir tracken hier nur diese Datei
+          path: timestamp.txt
           delete-branch: false
+
+      - name: Enable GitHub Auto-Merge
+        if: steps.cpr.outputs.pull-request-number != ''
+        uses: peter-evans/enable-pull-request-automerge@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+          merge-method: squash
