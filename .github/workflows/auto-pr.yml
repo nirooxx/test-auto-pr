@@ -1,0 +1,38 @@
+name: Test Auto-PR & Merge
+
+# Manuelles Auslösen und zusätzlich alle 5 Minuten (zum Testen)
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write           # für checkout & commit
+  pull-requests: write      # für PR erstellen und mergen
+
+jobs:
+  update-generated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Update Timestamp
+        run: |
+          echo "Last updated: $(date --utc +"%Y-%m-%dT%H:%M:%SZ")" >> timestamp.txt || true
+
+      - name: Create or update PR for generated files
+        uses: peter-evans/create-pull-request@v7
+        with:
+          # Branch für die Änderungen
+          branch: generated-sources
+          # Commit-Message & PR-Meta
+          commit-message: "chore: update timestamp.txt"
+          title: "chore: update timestamp.txt"
+          body: |
+            Dieser PR wurde automatisch erstellt, um timestamp.txt zu aktualisieren.
+          base: main
+          add-paths: |
+            timestamp.txt
+          # Standard-Token reicht hier aus
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Auto-Merge aktivieren
+          auto-merge: true
+          merge-method: squash
