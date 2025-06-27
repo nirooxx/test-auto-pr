@@ -9,30 +9,34 @@ permissions:
   pull-requests: write      # für PR erstellen und mergen
 
 jobs:
-  update-generated:
+  generate-and-pr:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout main
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Update Timestamp
+      - name: Generate or update files
         run: |
-          echo "Last updated: $(date --utc +"%Y-%m-%dT%H:%M:%SZ")" >> timestamp.txt || true
+          # Beispiel: Timestamp aktualisieren
+          echo "Last updated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> timestamp.txt || true
 
-      - name: Create or update PR for generated files
+      - name: Create or update pull request
         uses: peter-evans/create-pull-request@v7
         with:
-          # Branch für die Änderungen
-          branch: generated-sources
-          # Commit-Message & PR-Meta
-          commit-message: "chore: update timestamp.txt"
-          title: "chore: update timestamp.txt"
-          body: |
-            Dieser PR wurde automatisch erstellt, um timestamp.txt zu aktualisieren.
-          base: main
-          add-paths: |
-            timestamp.txt
-          # Standard-Token reicht hier aus
+          # Token mit Schreibrechten – GITHUB_TOKEN ist ausreichend
           token: ${{ secrets.GITHUB_TOKEN }}
-          # Auto-Merge aktivieren
+          branch: generated-sources
+          base: main
+          title: "chore: update generated annotations & models"
+          commit-message: "chore: update generated annotations & models"
+          body: |
+            Dieser PR aktualisiert automatisch die generierten Annotations & Models.
+          add-paths: |
+            annotations/**
+            models/**
+          # Aktiviert das Auto-Merge direkt nach grünem CI-Check
           auto-merge: true
           merge-method: squash
+          delete-branch: false
